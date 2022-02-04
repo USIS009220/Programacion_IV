@@ -16,34 +16,34 @@ var app = new Vue({
     methods: {
         guardarCliente(){
             db_sistema.transaction(tx=>{
-                tx.executeSql('INSERT INTO clientes(codigo,nombre,direccion,telefono,dui) VALUES (?,?,?,?,?)')
-                [this.cliente.codigo, this.cliente.nombre, this.cliente.direccion, this.cliente.telefono,
+                tx.executeSql('INSERT INTO clientes (codigo, nombre, direccion, telefono, dui) VALUES (?,?,?,?,?)',
+                [this.cliente.codigo, this.cliente.nombre, this.cliente.direccion, this.cliente.telefono, 
                     this.cliente.dui],
                 (tx, results)=>{
                     this.cliente.msg = 'Cliente guardado con exito';
                     this.nuevoCliente();
-                };
+                },
                 (tx, error)=>{
-                    this.cliente.msg = 'Error al guaradar el cliente ${error.message}';
+                    this.cliente.msg = `Error al guardar el cliente ${error.message}`;
                 });
             });
-         },
-         nuevoCliente(){
-             this.cliente.accion = 'nuevo';
-             this.cliente.idCliente = '';
-             this.cliente.codigo = '';
-             this.cliente.nombre = '';
-             this.cliente.direccion = ';'
-             this.cliente.telefono = '';
-             this.cliente.dui = '';
+        },
+        nuevoCliente(){
+            this.cliente.accion = 'nuevo';
+            this.cliente.idCliente = '';
+            this.cliente.codigo = '';
+            this.cliente.nombre = '';
+            this.cliente.direccion = '';
+            this.cliente.telefono = '';
+            this.cliente.dui = '';
         }
-    };
+    },
     created(){
         db_sistema.transaction(tx=>{
-            tx.executeSql('CREATE TABLE IF NOT EXISTS cliente(idCliente INTEGER PRIMARY KEY AUTOINCREMENT, '+ 
-            'CODIGO char(10), nombre char(75), direccion TEXT, telefono char(10), dui char(10))');
-
+            tx.executeSql('CREATE TABLE IF NOT EXISTS clientes(idCliente INTEGER PRIMARY KEY AUTOINCREMENT, '+
+                'codigo char(10), nombre char(75), direccion TEXT, telefono char(10), dui char(10))');
         }, err=>{
-            console.log('Error al crearla tabla de clientes', err);
+            console.log('Error al crear la tabla de clientes', err);
         });
     }
+});
