@@ -1,21 +1,88 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRUD Clientes - Offline</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" 
-        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-</head>
-<body>
-    <div id="appCliente">
-        <div class="container-fluid">
-            <form @submit.prevent="guardarCliente" method="post" id="frmCliente">
+Vue.component('cliente', {
+    data:()=>{
+        return {
+            clientes: [],
+            buscar: '',
+            cliente: {
+                accion: 'nuevo',
+                msg : '',
+                idCliente: '',
+                codigo: '',
+                nombre: '',
+                direccion: '',
+                telefono: '',
+                dui: ''
+            }
+        }
+    },
+    methods: {
+        buscarCliente(){
+            this.obtenerDatos(this.buscar);
+        },
+        guardarCliente(){
+            this.obtenerDatos();
+            let clientes = this.clientes || [];
+            if( this.cliente.accion == 'nuevo' ){
+                this.cliente.idCliente = idUnicoFecha();
+                clientes.push(this.cliente);
+            }else if( this.cliente.accion == 'modificar' ){
+                let index = clientes.findIndex(cliente=>cliente.idCliente==this.cliente.idCliente);
+                clientes[index] = this.cliente;
+            }else if( this.cliente.accion == 'eliminar' ){
+                let index = clientes.findIndex(cliente=>cliente.idCliente==this.cliente.idCliente);
+                clientes.splice(index,1);
+            }
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+            this.cliente.msg = 'Cliente procesado con exito';
+            this.nuevoCliente();
+            this.obtenerDatos();
+        },
+        modificarCliente(data){
+            this.cliente = JSON.parse(JSON.stringify(data));
+            this.cliente.accion = 'modificar';
+        },
+        eliminarCliente(data){
+            if( confirm(`¿Esta seguro de eliminar el cliente ${data.nombre}?`) ){
+                this.cliente.idCliente = data.idCliente;
+                this.cliente.accion = 'eliminar';
+                this.guardarCliente();
+            }
+        },
+        obtenerDatos(busqueda=''){
+            this.clientes = [];
+            if( localStorage.getItem('clientes')!=null ){
+                for(let i=0; i<JSON.parse(localStorage.getItem('clientes')).length; i++){
+                    let data = JSON.parse(localStorage.getItem('clientes'))[i];
+                    if( this.buscar.length>0 ){
+                        if( data.nombre.toLowerCase().indexOf(this.buscar.toLowerCase())>-1 ){
+                            this.clientes.push(data);
+                        }
+                    }else{
+                        this.clientes.push(data);
+                    }
+                }
+            }
+        },
+        nuevoCliente(){
+            this.cliente.accion = 'nuevo';
+            this.cliente.idCliente = '';
+            this.cliente.codigo = '';
+            this.cliente.nombre = '';
+            this.cliente.direccion = '';
+            this.cliente.telefono = '';
+            this.cliente.dui = '';
+            this.cliente.msg = '';
+        }
+    }, 
+    created(){
+        this.obtenerDatos();
+    },
+    template: `
+        <div id='appCliente'>
+            <form @submit.prevent="guardarCliente" @reset.prevent="nuevoCliente" method="post" id="frmCliente">
                 <div class="card mb-3">
                     <div class="card-header text-white bg-dark">
                         Administracion de Clientes
-
                         <button type="button" class="btn-close bg-white" data-bs-dismiss="alert" data-bs-target="#frmCliente" aria-label="Close"></button>
                     </div>
                     <div class="card-body">
@@ -69,7 +136,6 @@
             <div class="card mb-3" id="cardBuscarCliente">
                 <div class="card-header text-white bg-dark">
                     Busqueda de Clientes
-
                     <button type="button" class="btn-close bg-white" data-bs-dismiss="alert" data-bs-target="#cardBuscarCliente" aria-label="Close"></button>
                 </div>
                 <div class="card-body">
@@ -90,23 +156,20 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="cliente in clientes" :key="cliente.idCliente" @click="modificarCliente(cliente)">
-                                <td>{{cliente.codigo}}</td>
-                                <td>{{cliente.nombre}}</td>
-                                <td>{{cliente.direccion}}</td>
-                                <td>{{cliente.telefono}}</td>
-                                <td>{{cliente.dui}}</td>
+                            <tr v-for="item in clientes" :key="item.idCliente" @click="modificarCliente(item)">
+                                <td>{{item.codigo}}</td>
+                                <td>{{item.nombre}}</td>
+                                <td>{{item.direccion}}</td>
+                                <td>{{item.telefono}}</td>
+                                <td>{{item.dui}}</td>
                                 <td>
-                                    <button type="button" class="btn btn-danger" @click="eliminarCliente(cliente)">Eliminar</button>
+                                    <button type="button" class="btn btn-danger" @click="eliminarCliente(item)">Eliminar</button>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-            </div> 
-        </div>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
-    <script src="main.js"></script>
-</body>
-</html>
+            </div>
+        </div> 
+    `
+});
