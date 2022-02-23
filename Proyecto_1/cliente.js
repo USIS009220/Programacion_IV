@@ -1,13 +1,13 @@
-<<<<<<< HEAD:Proyecto_1/cliente.js
-Vue.component('cliente', {
+Vue.component('cliente',{
     data:()=>{
         return {
-            clientes: [],
-            buscar: '',
-            cliente: {
-                accion: 'nuevo',
+            buscar:'',
+            clientes:[],
+            cliente:{
+                accion : 'nuevo',
+                mostrar_msg : false,
                 msg : '',
-                idCliente: '',
+                idCliente : '',
                 codigo: '',
                 nombre: '',
                 direccion: '',
@@ -16,176 +16,152 @@ Vue.component('cliente', {
             }
         }
     },
-    methods: {
-        buscarCliente(){
-            this.obtenerDatos(this.buscar);
+    methods:{
+        buscandoCliente(){
+            this.obtenerClientes(this.buscar);
+        },
+        eliminarCliente(cliente){
+            if( confirm(`Esta seguro de eliminar el cliente ${cliente.nombre}?`) ){
+                this.cliente.accion = 'eliminar';
+                this.cliente.idCliente = cliente.idCliente;
+                this.guardarCliente();
+            }
+            this.nuevoCliente();
+        },
+        modificarCliente(datos){
+            this.cliente = JSON.parse(JSON.stringify(datos));
+            this.cliente.accion = 'modificar';
         },
         guardarCliente(){
-            this.obtenerDatos();
-            let clientes = this.clientes || [];
-            if( this.cliente.accion == 'nuevo' ){
-                this.cliente.idCliente = idUnicoFecha();
+            this.obtenerClientes();
+            let clientes = JSON.parse(localStorage.getItem('clientes')) || [];
+            if(this.cliente.accion=="nuevo"){
+                this.cliente.idCliente = generarIdUnicoFecha();
                 clientes.push(this.cliente);
-            }else if( this.cliente.accion == 'modificar' ){
+            } else if(this.cliente.accion=="modificar"){
                 let index = clientes.findIndex(cliente=>cliente.idCliente==this.cliente.idCliente);
                 clientes[index] = this.cliente;
-            }else if( this.cliente.accion == 'eliminar' ){
+            } else if( this.cliente.accion=="eliminar" ){
                 let index = clientes.findIndex(cliente=>cliente.idCliente==this.cliente.idCliente);
                 clientes.splice(index,1);
             }
             localStorage.setItem('clientes', JSON.stringify(clientes));
-            this.cliente.msg = 'Cliente procesado con exito';
             this.nuevoCliente();
-            this.obtenerDatos();
+            this.obtenerClientes();
+            this.cliente.msg = 'Cliente procesado con exito';
         },
-        modificarCliente(data){
-            this.cliente = JSON.parse(JSON.stringify(data));
-            this.cliente.accion = 'modificar';
-        },
-        eliminarCliente(data){
-            if( confirm(`¿Esta seguro de eliminar el cliente ${data.nombre}?`) ){
-                this.cliente.idCliente = data.idCliente;
-                this.cliente.accion = 'eliminar';
-                this.guardarCliente();
-            }
-        },
-        obtenerDatos(busqueda=''){
+        obtenerClientes(valor=''){
             this.clientes = [];
-            if( localStorage.getItem('clientes')!=null ){
-                for(let i=0; i<JSON.parse(localStorage.getItem('clientes')).length; i++){
-                    let data = JSON.parse(localStorage.getItem('clientes'))[i];
-                    if( this.buscar.length>0 ){
-                        if( data.nombre.toLowerCase().indexOf(this.buscar.toLowerCase())>-1 ){
-                            this.clientes.push(data);
-                        }
-                    }else{
-                        this.clientes.push(data);
-                    }
-                }
-            }
+            let clientes = JSON.parse(localStorage.getItem('clientes')) || [];
+            this.clientes = clientes.filter(cliente=>cliente.nombre.toLowerCase().indexOf(valor.toLowerCase())>-1);
         },
         nuevoCliente(){
             this.cliente.accion = 'nuevo';
+            this.cliente.msg = '';
             this.cliente.idCliente = '';
             this.cliente.codigo = '';
             this.cliente.nombre = '';
             this.cliente.direccion = '';
             this.cliente.telefono = '';
             this.cliente.dui = '';
-            this.cliente.msg = '';
         }
-    }, 
-    created(){
-        this.obtenerDatos();
     },
-    template: `
-        <div id='appCliente'>
-=======
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRUD Clientes - Offline</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" 
-        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-</head>
-<body>
-    <div id="appCliente">
-        <div class="container-fluid">
->>>>>>> 07f6fe485b828cdb3a52adb61ae62da67667462a:Proyecto_1/cliente.html
-            <form @submit.prevent="guardarCliente" @reset.prevent="nuevoCliente" method="post" id="frmCliente">
-                <div class="card mb-3">
-                    <div class="card-header text-white bg-dark">
-                        Administracion de Clientes
-                        <button type="button" class="btn-close bg-white" data-bs-dismiss="alert" data-bs-target="#frmCliente" aria-label="Close"></button>
-                    </div>
-                    <div class="card-body">
+    created(){
+        this.obtenerClientes();
+    },
+    template:`
+        <div id="appCiente">
+            <div class="card text-white" id="carCliente">
+                <div class="card-header bg-primary">
+                    Registro de Clientes
+                    <button type="button" class="btn-close text-end" data-bs-dismiss="alert" data-bs-target="#carCliente" aria-label="Close"></button>
+                </div>
+                <div class="card-body text-dark">
+                    <form method="post" @submit.prevent="guardarCliente" @reset="nuevoCliente">
                         <div class="row p-1">
-                            <div class="col col-md-1">Codigo</div>
+                            <div class="col col-md-2">Codigo:</div>
                             <div class="col col-md-2">
-                                <input v-model="cliente.codigo" placeholder="codigo" pattern="[A-Z0-9]{3,10}" required title="Codigo de cliente" class="form-control" type="text">
+                                <input title="Ingrese el codigo" v-model="cliente.codigo" pattern="[0-9]{3,10}" required type="text" class="form-control">
                             </div>
                         </div>
                         <div class="row p-1">
-                            <div class="col col-md-1">Nombre</div>
-                            <div class="col col-md-2">
-                                <input v-model="cliente.nombre" placeholder="escribe tu nombre" pattern="[A-Za-zÑñáéíóú ]{3,75}" required title="Nombre de cliente" class="form-control" type="text">
+                            <div class="col col-md-2">Nombre:</div>
+                            <div class="col col-md-3">
+                                <input title="Ingrese el nombre" v-model="cliente.nombre" pattern="[A-Za-zñÑáéíóúü ]{3,75}" required type="text" class="form-control">
                             </div>
                         </div>
                         <div class="row p-1">
-                            <div class="col col-md-1">Direccion</div>
-                            <div class="col col-md-2">
-                                <input v-model="cliente.direccion" placeholder="donde vives" pattern="[A-Za-z0-9Ññáéíóú ]{3,100}" required title="Direccion de cliente" class="form-control" type="text">
+                            <div class="col col-md-2">Direccion:</div>
+                            <div class="col col-md-3">
+                                <input title="Ingrese la direccion" v-model="cliente.direccion" pattern="[A-Za-zñÑáéíóúü ]{3,100}" required type="text" class="form-control">
                             </div>
                         </div>
                         <div class="row p-1">
-                            <div class="col col-md-1">Telefono</div>
+                            <div class="col col-md-2">Telefono:</div>
                             <div class="col col-md-2">
-                                <input v-model="cliente.telefono" placeholder="tu tel" pattern="[0-9]{4}-[0-9]{4}" required title="Telefono de cliente" class="form-control" type="text">
+                                <input title="Ingrese el tel" v-model="cliente.telefono" pattern="[0-9]{4}-[0-9]{4}" required type="text" class="form-control">
                             </div>
                         </div>
                         <div class="row p-1">
-                            <div class="col col-md-1">DUI</div>
+                            <div class="col col-md-2">DUI:</div>
                             <div class="col col-md-2">
-                                <input v-model="cliente.dui" placeholder="tu DUI" pattern="[0-9]{8}-[0-9]{1}" required title="DUI de cliente" class="form-control" type="text">
+                                <input title="Ingrese el DUI" v-model="cliente.dui" pattern="[0-9]{8}-[0-9]{1}" required type="text" class="form-control">
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col col-md-3 text-center">
-                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <div class="row p-1">
+                            <div class="col col-md-5 text-center">
+                                <div v-if="cliente.mostrar_msg" class="alert alert-primary alert-dismissible fade show" role="alert">
                                     {{ cliente.msg }}
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col col-md-3 text-center">
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                                <button type="reset" class="btn btn-warning">Nuevo</button>
+                        <div class="row m-2">
+                            <div class="col col-md-5 text-center">
+                                <input class="btn btn-success" type="submit" value="Guardar">
+                                <input class="btn btn-warning" type="reset" value="Nuevo">
                             </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
-            </form>
-            <div class="card mb-3" id="cardBuscarCliente">
-                <div class="card-header text-white bg-dark">
+            </div>
+            <div class="card text-white" id="carBuscarCliente">
+                <div class="card-header bg-primary">
                     Busqueda de Clientes
-                    <button type="button" class="btn-close bg-white" data-bs-dismiss="alert" data-bs-target="#cardBuscarCliente" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" data-bs-target="#carBuscarCliente" aria-label="Close"></button>
                 </div>
                 <div class="card-body">
-                    <table class="table">
+                    <table class="table table-dark table-hover">
                         <thead>
                             <tr>
-                                <td colspan="6">
-                                    Buscar: <input title="Introduzca el texto a buscar" @keyup="buscarCliente" v-model="buscar" class="form-control" type="text">
-                                </td>
+                                <th colspan="6">
+                                    Buscar: <input @keyup="buscandoCliente" v-model="buscar" placeholder="buscar aqui" class="form-control" type="text" >
+                                </th>
                             </tr>
                             <tr>
-                                <th>Codigo</th>
-                                <th>Nombre</th>
-                                <th>Direccion</th>
-                                <th>Telefono</th>
+                                <th>CODIGO</th>
+                                <th>NOMBRE</th>
+                                <th>DIRECCION</th>
+                                <th>TEL</th>
                                 <th>DUI</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="item in clientes" :key="item.idCliente" @click="modificarCliente(item)">
+                            <tr v-for="item in clientes" @click='modificarCliente( item )' :key="item.idCliente">
                                 <td>{{item.codigo}}</td>
                                 <td>{{item.nombre}}</td>
                                 <td>{{item.direccion}}</td>
                                 <td>{{item.telefono}}</td>
                                 <td>{{item.dui}}</td>
                                 <td>
-                                    <button type="button" class="btn btn-danger" @click="eliminarCliente(item)">Eliminar</button>
+                                    <button class="btn btn-danger" @click="eliminarCliente(item)">Eliminar</button>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div> 
+        </div>
     `
 });
